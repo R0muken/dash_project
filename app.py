@@ -196,13 +196,13 @@ def update_graph_scatter(n1, start_button_clicks):
     try:
         # Data for components
         data = json.load(open('data.json'))
+
         df_for_fig1 = pd.DataFrame(data['charts'][0])
         df_for_fig2 = pd.DataFrame(data['charts'][1])
-        # df_for_table = pd.DataFrame(data['markers_table'])
 
         # table = table_data.append(df_for_table, ignore_index=True)
-        table = table_data.append(pd.DataFrame([[i, data['markers_table'][i]] for i in data['markers_table']]), ignore_index=True)
-        c = pd.DataFrame(data=table)
+        df_for_table = pd.DataFrame(columns=['name', 'value'],
+                                    data=[[i, data['markers_table'][i][0]] for i in data['markers_table']])
 
 
         # Firs graph
@@ -214,7 +214,7 @@ def update_graph_scatter(n1, start_button_clicks):
         fig2 = px.line(df_for_fig2, x=df_for_fig2['timestamp'], y=df_for_fig2['price'], markers=True, )
         fig2.update_traces(line_color='#E450FF')
         fig2.update_layout(template=CHARTS_TEMPlATE)
-        return fig1, fig2, table.to_dict('records')
+        return fig1, fig2, df_for_table.to_dict('records')
 
     except:
         print('no data')
