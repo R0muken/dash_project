@@ -18,7 +18,6 @@ parser.add_argument('-s', '--start')
 parser.add_argument('-e', '--end')
 
 args = parser.parse_args()
-print(args)
 
 
 fake = Faker()
@@ -98,6 +97,7 @@ data = {
 }
 
 if __name__ == '__main__':
+    print(args)
     # with open("data.json", "w") as f:
     #     new_data = json.dumps(data, indent=4)
     #     f.write(new_data)

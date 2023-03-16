@@ -1,4 +1,4 @@
-from dash import Dash, dcc, html, Input, Output, State, dash_table
+from dash import Dash, dcc, html, Input, Output, State, dash_table, ctx
 
 import plotly
 import plotly.express as px
@@ -18,8 +18,11 @@ from json_generator import log_example
 
 process = ["python", "json_generator.py"]
 
+asset_options = []
 with open('asset.txt', 'r') as f:
-    asset_options = f.readlines()
+    for line in f:
+        line = line.strip()
+        asset_options.append(line)
 
 # Empty data for Table
 table_data = pd.DataFrame(columns=['name', 'value'])
@@ -61,7 +64,6 @@ app.layout = html.Div([
                 data=table_data.to_dict('records'),
                 page_size=9,
 
-
                 style_table={'maxWidth': '800px', 'maxHeight': '400px'},
                 style_header={
                     'backgroundColor': '#440060',
@@ -82,9 +84,15 @@ app.layout = html.Div([
         ], className='Spare-graph'),
 
         html.Div([
-            dcc.DatePickerSingle(id='start-date', className='my-2', placeholder='day start', with_portal=True, date=None),
+            # Days and asset menu
+            dcc.DatePickerSingle(id='start-date', className='my-2', placeholder='day start', with_portal=True,
+                                 date=None),
             dcc.DatePickerSingle(id='end-date', className='my-2', placeholder='day end', date=None),
             dcc.Dropdown(id='asset', className='mt-2', placeholder='Asset', options=asset_options, value=None),
+
+            # Add input
+            html.Button('Add Input', id='add-input', className='mt-2', n_clicks=0),
+            html.Div(id='input-container', children=[]),
         ], className='w-25'),
 
     ], className='d-flex'),
@@ -108,6 +116,38 @@ app.layout = html.Div([
           })
 
 
+# @app.callback(
+#     Output('input-container', 'children'),
+#     Output('add-input', 'n_clicks'),
+#
+#     Input('add-input', 'n_clicks'),
+#     Input('reset-button', 'n_clicks'),
+#
+#     State('input-container', 'children'),
+#     State('start-button', 'n_clicks'),
+#     State('reset-button', 'disabled')
+# )
+# def add_input(n_clicks, r, children, start_clicks, dis):
+#     print(ctx.triggered_id)
+#     if n_clicks > 0:
+#         new_input = dcc.Input(
+#             id={'type': 'dynamic-input', 'index': n_clicks},
+#             type='text',
+#             placeholder='argname'
+#         )
+#         n = dcc.Input(
+#             id={'type': 'dynamic-input', 'index': n_clicks},
+#             # type='number',
+#             placeholder='value'
+#         )
+#         children.append(new_input)
+#         children.append(n)
+#     if r > 0:
+#         print(ctx.triggered_id)
+#         children = []
+#     n_clicks = 0
+#     return children, n_clicks
+
 # CALLBACK FOR BUTTONS
 @app.callback(
     Output('start-button', 'disabled'),
@@ -117,21 +157,52 @@ app.layout = html.Div([
     Output('start-button', 'n_clicks'),
     Output('pause-button', 'n_clicks'),
     Output('reset-button', 'n_clicks'),
+    Output('start-date', 'date'),
+    Output('end-date', 'date'),
+    Output('asset', 'value'),
+    Output('input-container', 'children'),
+    Output('add-input', 'n_clicks'),
 
     Input('start-button', 'n_clicks'),
     Input('pause-button', 'n_clicks'),
     Input('reset-button', 'n_clicks'),
-    Input('start-date', 'date'),
-    Input('end-date', 'date'),
-    Input('asset', 'value'),
+    Input('add-input', 'n_clicks'),
+    # Input('start-date', 'date'),
+    # Input('end-date', 'date'),
+    # Input('asset', 'value'),
 
     State('start-button', 'disabled'),
     State('pause-button', 'disabled'),
     State('reset-button', 'disabled'),
-    State('interval', 'disabled'))
-def update_state(start_clicks, pause_clicks, reset_clicks,
-                 start_date, end_date, asset,
-                 start_disabled, pause_disabled, reset_disabled,interval_disabled):
+    State('interval', 'disabled'),
+    State('start-date', 'date'),
+    State('end-date', 'date'),
+    State('asset', 'value'),
+    State('input-container', 'children'))
+def update_state(start_clicks, pause_clicks, reset_clicks, add_input_clicks,
+                 start_disabled, pause_disabled, reset_disabled, interval_disabled,
+                 start_date, end_date, asset, children):
+    if add_input_clicks > 0:
+        new_input = dcc.Input(
+            id={'type': 'dynamic-input', 'index': add_input_clicks},
+            type='text',
+            placeholder='arg name'
+        )
+        n = dcc.Input(
+            id={'type': 'dynamic-input', 'index': add_input_clicks},
+            # type='number',
+            placeholder='value'
+        )
+        children.append(new_input)
+        children.append(n)
+        add_input_clicks = 0
+
+    if start_clicks > 0:
+        inputs = [child['props']['value'] for child in children]
+
+        for _ in inputs:
+            process.append(_)
+
     if start_date:
         process.append('-s')
         process.append(start_date)
@@ -152,7 +223,9 @@ def update_state(start_clicks, pause_clicks, reset_clicks,
         interval_disabled = False
         start_clicks = 0
 
+        print(process)
         # Start data_generator
+
         subprocess.Popen(process, shell=True)
         print('start')
 
@@ -183,8 +256,9 @@ def update_state(start_clicks, pause_clicks, reset_clicks,
         start_clicks = 0
         pause_clicks = 0
         reset_clicks = 0
-
+        start_date, end_date, asset = None, None, None
         time.sleep(1)
+        children = []
 
         # Terminate data_generator
         file = open('pid.txt', 'r')
@@ -197,8 +271,10 @@ def update_state(start_clicks, pause_clicks, reset_clicks,
             json_data = json.dumps(data, indent=4)
             f.write(json_data)
         print('reset')
+        print('-----------------------------------')
 
-    return start_disabled, pause_disabled, reset_disabled, interval_disabled, start_clicks, pause_clicks, reset_clicks
+    return (start_disabled, pause_disabled, reset_disabled, interval_disabled, start_clicks, pause_clicks, reset_clicks,
+            start_date, end_date, asset, children, add_input_clicks)
 
 
 @app.callback(
