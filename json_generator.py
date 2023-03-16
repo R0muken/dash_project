@@ -4,6 +4,22 @@ from faker import Faker
 import time
 import os
 import datetime
+import argparse
+
+
+parser = argparse.ArgumentParser(prog='Json_generator')
+
+parser.add_argument('-c', '--count')
+parser.add_argument('-a', '--asset')
+parser.add_argument('-n', '--number')
+parser.add_argument('-g', '--global')
+parser.add_argument('-v', '--value')
+parser.add_argument('-s', '--start')
+parser.add_argument('-e', '--end')
+
+args = parser.parse_args()
+print(args)
+
 
 fake = Faker()
 

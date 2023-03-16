@@ -16,6 +16,11 @@ import dash_bootstrap_components as dbc
 
 from json_generator import log_example
 
+process = ["python", "json_generator.py"]
+
+with open('asset.txt', 'r') as f:
+    asset_options = f.readlines()
+
 # Empty data for Table
 table_data = pd.DataFrame(columns=['name', 'value'])
 
@@ -77,9 +82,9 @@ app.layout = html.Div([
         ], className='Spare-graph'),
 
         html.Div([
-            dcc.Dropdown(placeholder='Date1', className='mb-2'),
-            dcc.Dropdown(placeholder='Date1', className='mb-2'),
-            dcc.Dropdown(placeholder='Asset'),
+            dcc.DatePickerSingle(id='start-date', className='my-2', placeholder='day start', with_portal=True, date=None),
+            dcc.DatePickerSingle(id='end-date', className='my-2', placeholder='day end', date=None),
+            dcc.Dropdown(id='asset', className='mt-2', placeholder='Asset', options=asset_options, value=None),
         ], className='w-25'),
 
     ], className='d-flex'),
@@ -116,13 +121,27 @@ app.layout = html.Div([
     Input('start-button', 'n_clicks'),
     Input('pause-button', 'n_clicks'),
     Input('reset-button', 'n_clicks'),
+    Input('start-date', 'date'),
+    Input('end-date', 'date'),
+    Input('asset', 'value'),
 
     State('start-button', 'disabled'),
     State('pause-button', 'disabled'),
     State('reset-button', 'disabled'),
     State('interval', 'disabled'))
-def update_state(start_clicks, pause_clicks, reset_clicks, start_disabled, pause_disabled, reset_disabled,
-                 interval_disabled):
+def update_state(start_clicks, pause_clicks, reset_clicks,
+                 start_date, end_date, asset,
+                 start_disabled, pause_disabled, reset_disabled,interval_disabled):
+    if start_date:
+        process.append('-s')
+        process.append(start_date)
+    if end_date:
+        process.append('-e')
+        process.append(end_date)
+    if asset:
+        process.append('-a')
+        process.append(asset)
+
     # Handle start button click
     if start_clicks > 0:
         state['running'] = True
@@ -134,7 +153,7 @@ def update_state(start_clicks, pause_clicks, reset_clicks, start_disabled, pause
         start_clicks = 0
 
         # Start data_generator
-        subprocess.Popen(["python", "json_generator.py"], shell=True)
+        subprocess.Popen(process, shell=True)
         print('start')
 
     # Handle pause button click
@@ -203,7 +222,6 @@ def update_graph_scatter(n1, start_button_clicks):
         # table = table_data.append(df_for_table, ignore_index=True)
         df_for_table = pd.DataFrame(columns=['name', 'value'],
                                     data=[[i, data['markers_table'][i][0]] for i in data['markers_table']])
-
 
         # Firs graph
         fig1 = px.line(df_for_fig1, x=df_for_fig1['timestamp'], y=df_for_fig1['portfolio_value'], markers=True, )
