@@ -43,28 +43,6 @@ table_data = ['{market_driver} monthly %',
               'Dynamic Chi-squared test, p-value']
 
 
-# Main version test data
-def log_example():
-    logs_example = {
-        'charts':
-            [
-                {
-                    'name': 'pnl',
-                    'timestamp': [],
-                    'portfolio_value': []
-                },
-                {
-                    'name': '{target_asset}',
-                    'timestamp': [],
-                    'price': []
-                }
-            ],
-        'markers_table':
-            {}
-    }
-    return logs_example
-
-
 # Later version test data
 def generate_random_data(time):
     data = {

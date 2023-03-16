@@ -14,7 +14,8 @@ import time
 import json
 import dash_bootstrap_components as dbc
 
-from json_generator import log_example
+from utils import log_example
+from utils import transformation
 
 process = ["python", "json_generator.py"]
 
@@ -201,7 +202,8 @@ def update_state(start_clicks, pause_clicks, reset_clicks, add_input_clicks,
         inputs = [child['props']['value'] for child in children]
 
         for _ in inputs:
-            process.append(_)
+            option = transformation(_)
+            process.append(option)
 
     if start_date:
         process.append('-s')
