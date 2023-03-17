@@ -1,24 +1,25 @@
-from dash import Dash, dcc, html, Input, Output, State, dash_table, ctx
+from dash import Dash, dcc, html, Input, Output, State, dash_table
+import dash_bootstrap_components as dbc
 
-import plotly
 import plotly.express as px
 import plotly.graph_objs as go
 
 import pandas as pd
 
-from collections import deque, OrderedDict
+from collections import deque
 
 import subprocess
-import random
+
 import time
 import json
-import dash_bootstrap_components as dbc
 
 from utils import log_example
 from utils import transformation
 
+# Cmd line for process
 process = ["python", "json_generator.py"]
 
+# Data for asset dropdown menu
 asset_options = []
 with open('asset.txt', 'r') as f:
     for line in f:
@@ -53,11 +54,15 @@ app = Dash(__name__,
 
 app.layout = html.Div([
     dbc.Row([
-        dbc.Col(dcc.Graph(id='main-graph', ), width=5),
+        # First graph
+        dbc.Col(dcc.Graph(id='first-graph', ), width=5),
+
         dcc.Interval(
             id='interval',
             interval=1000,
             disabled=True),
+
+        # Table
         dbc.Col([
             dash_table.DataTable(
                 id='table',
@@ -78,9 +83,10 @@ app.layout = html.Div([
         ]),
     ]),
 
+    # Second graph
     html.Div([
         html.Div([
-            html.Div([dcc.Graph(id='spare-graph', className='Spare-graph'), ], className='Spare-graph'),
+            html.Div([dcc.Graph(id='second-graph', className='Spare-graph'), ], className='Spare-graph'),
 
         ], className='Spare-graph'),
 
@@ -91,10 +97,10 @@ app.layout = html.Div([
             dcc.DatePickerSingle(id='end-date', className='my-2', placeholder='day end', date=None),
             dcc.Dropdown(id='asset', className='mt-2', placeholder='Asset', options=asset_options, value=None),
 
-            # Add input
+            # Add args input
             html.Button('Add Input', id='add-input', className='mt-2', n_clicks=0),
-            html.Div(id='input-container', children=[]),
-        ], className='w-25'),
+            html.Div(id='input-container', children=[], className='Inputs'),
+        ], className=''),
 
     ], className='d-flex'),
 
@@ -183,19 +189,20 @@ app.layout = html.Div([
 def update_state(start_clicks, pause_clicks, reset_clicks, add_input_clicks,
                  start_disabled, pause_disabled, reset_disabled, interval_disabled,
                  start_date, end_date, asset, children):
+    # Args parsing
     if add_input_clicks > 0:
-        new_input = dcc.Input(
+        name_input = dcc.Input(
             id={'type': 'dynamic-input', 'index': add_input_clicks},
             type='text',
             placeholder='arg name'
         )
-        n = dcc.Input(
+        value_input = dcc.Input(
             id={'type': 'dynamic-input', 'index': add_input_clicks},
             # type='number',
             placeholder='value'
         )
-        children.append(new_input)
-        children.append(n)
+        children.append(name_input)
+        children.append(value_input)
         add_input_clicks = 0
 
     if start_clicks > 0:
@@ -225,9 +232,7 @@ def update_state(start_clicks, pause_clicks, reset_clicks, add_input_clicks,
         interval_disabled = False
         start_clicks = 0
 
-        print(process)
         # Start data_generator
-
         subprocess.Popen(process, shell=True)
         print('start')
 
@@ -280,8 +285,8 @@ def update_state(start_clicks, pause_clicks, reset_clicks, add_input_clicks,
 
 
 @app.callback(
-    Output('main-graph', 'figure'),
-    Output('spare-graph', 'figure'),
+    Output('first-graph', 'figure'),
+    Output('second-graph', 'figure'),
     Output('table', 'data'),
     Input('interval', 'n_intervals'),
     Input('start-button', 'n_clicks')
