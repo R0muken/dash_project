@@ -16,8 +16,11 @@ import json
 from utils import log_example
 from utils import transformation
 
+
+processing_job_name = None
+
 # Cmd line for process
-process = ["python", "json_generator.py"]
+process = ["python3", "json_generator.py"]
 
 # Data for asset dropdown menu
 asset_options = []
@@ -123,38 +126,6 @@ app.layout = html.Div([
           })
 
 
-# @app.callback(
-#     Output('input-container', 'children'),
-#     Output('add-input', 'n_clicks'),
-#
-#     Input('add-input', 'n_clicks'),
-#     Input('reset-button', 'n_clicks'),
-#
-#     State('input-container', 'children'),
-#     State('start-button', 'n_clicks'),
-#     State('reset-button', 'disabled')
-# )
-# def add_input(n_clicks, r, children, start_clicks, dis):
-#     print(ctx.triggered_id)
-#     if n_clicks > 0:
-#         new_input = dcc.Input(
-#             id={'type': 'dynamic-input', 'index': n_clicks},
-#             type='text',
-#             placeholder='argname'
-#         )
-#         n = dcc.Input(
-#             id={'type': 'dynamic-input', 'index': n_clicks},
-#             # type='number',
-#             placeholder='value'
-#         )
-#         children.append(new_input)
-#         children.append(n)
-#     if r > 0:
-#         print(ctx.triggered_id)
-#         children = []
-#     n_clicks = 0
-#     return children, n_clicks
-
 # CALLBACK FOR BUTTONS
 @app.callback(
     Output('start-button', 'disabled'),
@@ -174,9 +145,6 @@ app.layout = html.Div([
     Input('pause-button', 'n_clicks'),
     Input('reset-button', 'n_clicks'),
     Input('add-input', 'n_clicks'),
-    # Input('start-date', 'date'),
-    # Input('end-date', 'date'),
-    # Input('asset', 'value'),
 
     State('start-button', 'disabled'),
     State('pause-button', 'disabled'),
@@ -189,6 +157,7 @@ app.layout = html.Div([
 def update_state(start_clicks, pause_clicks, reset_clicks, add_input_clicks,
                  start_disabled, pause_disabled, reset_disabled, interval_disabled,
                  start_date, end_date, asset, children):
+    global processing_job_name
     # Args parsing
     if add_input_clicks > 0:
         name_input = dcc.Input(
@@ -232,8 +201,15 @@ def update_state(start_clicks, pause_clicks, reset_clicks, add_input_clicks,
         interval_disabled = False
         start_clicks = 0
 
-        # Start data_generator
-        subprocess.Popen(process, shell=True)
+        # start processing_job
+        # processing_job_name = star_job()
+        # print(processing_job_name)
+
+        # Start data_generator for Windows
+        # subprocess.Popen(process, shell=True)
+
+        # Start data_generator for Amazon linux
+        subprocess.Popen(process)
         print('start')
 
     # Handle pause button click
@@ -245,11 +221,18 @@ def update_state(start_clicks, pause_clicks, reset_clicks, add_input_clicks,
         pause_clicks = 0
 
         time.sleep(1)
-
+        # print(processing_job_name)
+        # stop_job(processing_job_name)
         # Terminate data_generator
         file = open('pid.txt', 'r')
         process_id = file.readline()
-        subprocess.call(["taskkill", "/PID", process_id, '/F'], shell=True)
+
+        # Start data_generator for Windows
+        # subprocess.call(["taskkill", "/PID", process_id, '/F'], shell=True)
+
+        # Start data_generator for Amazon linux
+        subprocess.run(f"kill {process_id}", shell=True)
+
         print('stop')
 
     # Handle reset button click
@@ -266,11 +249,17 @@ def update_state(start_clicks, pause_clicks, reset_clicks, add_input_clicks,
         start_date, end_date, asset = None, None, None
         time.sleep(1)
         children = []
-
+        #
+        # stop_job(processing_job_name)
         # Terminate data_generator
         file = open('pid.txt', 'r')
         process_id = file.readline()
-        subprocess.call(["taskkill", "/PID", process_id, '/F'], shell=True)
+
+        # Start data_generator for Windows
+        # subprocess.call(["taskkill", "/PID", process_id, '/F'], shell=True)
+
+        # Start data_generator for Amazon linux
+        subprocess.run(f"kill {process_id}", shell=True)
 
         # Write empty data
         with open('data.json', 'w') as f:
@@ -317,7 +306,7 @@ def update_graph_scatter(n1, start_button_clicks):
         fig2.update_layout(template=CHARTS_TEMPlATE)
         return fig1, fig2, df_for_table.to_dict('records')
 
-    except:
+    except Exception:
         print('no data')
         fig.update_layout(template=CHARTS_TEMPlATE)
         return fig, fig, table_data.to_dict('records')

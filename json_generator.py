@@ -92,7 +92,6 @@ if __name__ == '__main__':
         with open("data.json", "w") as f:
             f.write(json_data)
 
-        print(json_data)
         time.sleep(2)
 
 
