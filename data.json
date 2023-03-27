@@ -1,0 +1,15 @@
+{
+    "charts": [
+        {
+            "name": "pnl",
+            "timestamp": [],
+            "portfolio_value": []
+        },
+        {
+            "name": "{target_asset}",
+            "timestamp": [],
+            "price": []
+        }
+    ],
+    "markers_table": {}
+}
