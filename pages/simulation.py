@@ -13,7 +13,8 @@ import pandas as pd
 from utils import log_example, asset_retrieving, transformation
 
 # Cmd line for process
-process = ["python", "json_generator.py"]
+
+process = ["python3", "json_generator.py"]
 
 # Empty data for Table
 table_data = pd.DataFrame(columns=['name', 'value'])
