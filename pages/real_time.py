@@ -13,6 +13,7 @@ import pandas as pd
 from utils import log_example, asset_retrieving, transformation
 
 # Cmd line for process
+
 process = ["python3", "json_generator.py"]
 
 # Empty data for Table
