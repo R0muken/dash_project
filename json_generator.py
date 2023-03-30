@@ -1,14 +1,18 @@
 import random
 import json
-from faker import Faker
 import time
 import os
 import datetime
+
+from faker import Faker
 import argparse
 
-# Arguments
+from utils import data_retrieving
+
+# Creating argument parser
 parser = argparse.ArgumentParser(prog='Json_generator')
 
+# Arguments
 parser.add_argument('-c', '--count')
 parser.add_argument('-a', '--asset')
 parser.add_argument('-n', '--number')
@@ -41,7 +45,7 @@ table_data = ['{market_driver} monthly %',
               'Dynamic Chi-squared test, p-value']
 
 
-# Later version test data
+# Test data generator
 def generate_random_data(time):
     fake = Faker()
     data = {
@@ -54,43 +58,23 @@ def generate_random_data(time):
     return data
 
 
-data = {
-    'charts':
-        [
-            {
-                'name': 'pnl',
-                'timestamp': [],
-                'portfolio_value': []
-            },
-            {
-                'name': '{target_asset}',
-                'timestamp': [],
-                'price': []
-            }
-        ],
-    'markers_table':
-        {
-        }
-}
+# Retrieving data from file
+data = data_retrieving()
 
 if __name__ == '__main__':
 
     while True:
         dt = datetime.datetime.now()
         dt_str = dt.strftime("%Y-%m-%d %H:%M:%S")
-        with open("data.json", "r") as f:
-            for i in range(1):
-                data = json.load(f)
-                data['charts'][0]['timestamp'].append(dt_str)
-                data['charts'][0]['portfolio_value'].append(random.randint(2800, 3200))
-                data['charts'][1]['timestamp'].append(dt_str)
-                data['charts'][1]['price'].append(round(random.uniform(0.28, 0.30), 2))
 
-                data["markers_table"][random.choice(table_data)] = [round(random.uniform(0.1, 0.8), 2)]
-                json_data = json.dumps(data, indent=4)
+        data['charts'][0]['timestamp'].append(dt_str)
+        data['charts'][0]['portfolio_value'].append(random.randint(2800, 3200))
+        data['charts'][1]['timestamp'].append(dt_str)
+        data['charts'][1]['price'].append(round(random.uniform(0.28, 0.30), 2))
+        data["markers_table"][random.choice(table_data)] = [round(random.uniform(0.1, 0.8), 2)]
 
         with open("data.json", "w") as f:
-            f.write(json_data)
+            json.dump(data, f, indent=4)
 
         time.sleep(2)
 
